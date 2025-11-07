@@ -1,0 +1,36 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.env
+*.DS_Store
+
+# Poetry
+poetry.lock
+
+# Logs
+logs/
+*.log
+
+# Spark checkpoint & metadata
+checkpoint/
+tmp/
+spark-warehouse/
+
+# Docker
+*.pid
+*.log
+docker-compose.override.yml
+
+# IDE
+.vscode/
+.idea/
+*.iml
+
+# Streamlit cache
+frontend/.streamlit/
+frontend/__pycache__/
+
+# Local environment
+.env

@@ -15,7 +15,7 @@
 
 ## 🧠 Overview
 
-The **News Stream Recommender** continuously ingests breaking news from live sources (RSS feeds and NewsAPI), applies NLP topic modeling in real time using **Apache Spark**, stores results in **MongoDB**, and visualizes insights via a **FastAPI** + **Streamlit** frontend.
+The **News Stream Recommender** continuously ingests breaking news from live sources (NewsAPI), applies NLP topic modeling in real time using **Apache Spark**, stores results in **MongoDB**, and visualizes insights via a **FastAPI** + **Streamlit** frontend.
 
 ---
 
@@ -30,3 +30,20 @@ The **News Stream Recommender** continuously ingests breaking news from live sou
 - 📦 **Poetry-Managed** – clean and reproducible Python environments  
 
 ---
+
+## 🏗️ Architecture
+
+![Design](images/news_feed_data_pipeline.png)
+
+---
+
+## ⚙️ Tech Stack
+
+| Layer | Technology |
+|-------|-------------|
+| Ingestion | **Kafka**, **NewsAPI**, **RSS Feeds** |
+| Processing | **Apache Spark** (Structured Streaming, TF-IDF, LDA) |
+| Storage | **MongoDB** |
+| Backend | **FastAPI** |
+| Frontend | **Streamlit** |
+| Management | **Docker Compose**, **Poetry** |

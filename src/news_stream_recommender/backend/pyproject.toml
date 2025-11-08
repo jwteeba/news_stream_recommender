@@ -1,21 +1,20 @@
 [project]
-name = "news-stream-recommender"
+name = "backend"
 version = "0.1.0"
 description = ""
 authors = [
     {name = "Jah-Wilson Teeba",email = "therealjwil07@gmail.com"}
 ]
-readme = "README.md"
+
 requires-python = ">=3.13"
 dependencies = [
+    "fastapi (>=0.121.0,<0.122.0)",
+    "uvicorn (>=0.38.0,<0.39.0)",
+    "pymongo (>=4.15.3,<5.0.0)",
+    "python-dotenv (>=1.0.0,<2.0.0)"
 ]
+package-mode = false 
 
-[tool.poetry]
-packages = [{include = "news_stream_recommender", from = "src"}]
-
-[tool.flake8]
-max-line-length = 120
-ignore = ["E501", "E203", "F841", "W503"]
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]

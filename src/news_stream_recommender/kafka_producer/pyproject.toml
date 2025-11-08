@@ -1,21 +1,19 @@
 [project]
-name = "news-stream-recommender"
+name = "kafka-producer"
 version = "0.1.0"
 description = ""
 authors = [
     {name = "Jah-Wilson Teeba",email = "therealjwil07@gmail.com"}
 ]
-readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
+    "requests (>=2.32.5,<3.0.0)",
+    "feedparser (>=6.0.12,<7.0.0)",
+    "kafka-python (>=2.2.15,<3.0.0)",
+    "python-dotenv (>=1.2.1,<2.0.0)"
 ]
 
-[tool.poetry]
-packages = [{include = "news_stream_recommender", from = "src"}]
-
-[tool.flake8]
-max-line-length = 120
-ignore = ["E501", "E203", "F841", "W503"]
+package-mode = false
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]

@@ -1,21 +1,19 @@
 [project]
-name = "news-stream-recommender"
+name = "frontend"
 version = "0.1.0"
 description = ""
 authors = [
     {name = "Jah-Wilson Teeba",email = "therealjwil07@gmail.com"}
 ]
-readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
+    "streamlit (>=1.51.0,<2.0.0)",
+    "pandas (>=2.3.3,<3.0.0)",
+    "requests (>=2.32.5,<3.0.0)",
+    "wordcloud (>=1.9.4,<2.0.0)"
 ]
 
-[tool.poetry]
-packages = [{include = "news_stream_recommender", from = "src"}]
-
-[tool.flake8]
-max-line-length = 120
-ignore = ["E501", "E203", "F841", "W503"]
+package-mode = false
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]

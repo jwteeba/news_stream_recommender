@@ -1,15 +1,15 @@
-FROM apache/spark:3.5.0
+FROM apache/spark:3.5.0-python3
 
 USER root
+
+RUN pip install --no-cache-dir --upgrade pip
 
 RUN pip install --no-cache-dir \
     numpy \
     pandas \
-    scikit-learn \
-    nltk \
     pymongo \
-    pyspark \
-    wordcloud
+    "openai>=2.0.0,<3.0.0" \
+    python-dotenv
 
 # Define JAR versions
 ARG SPARK_VERSION=3.5.0
@@ -30,6 +30,7 @@ RUN cd /opt/spark/jars && \
 
 USER spark
 WORKDIR /app
+
 
 COPY spark_streaming.py .
 

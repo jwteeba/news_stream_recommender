@@ -1,9 +1,9 @@
-# 📰 News Stream Recommender (Topic Clustering)
+# 📰 News Stream Recommender (Topic Clustering With OpenAI)
 
 > Real-Time NLP Data Pipeline using **Docker**, **FastAPI**, **Kafka**, **Spark**, **MongoDB**, **Streamlit**, and **Poetry**
 
 ---
-
+[![OpenAI](https://img.shields.io/badge/OpenAI-Topic%20Generation-7b68ee?logo=openai)]()
 [![Docker](https://img.shields.io/badge/Docker-Ready-blue?logo=docker)]()
 [![FastAPI](https://img.shields.io/badge/FastAPI-API-green?logo=fastapi)]()
 [![Apache Spark](https://img.shields.io/badge/Spark-Streaming-orange?logo=apache-spark)]()
@@ -15,14 +15,14 @@
 
 ## 🧠 Overview
 
-The **News Stream Recommender** continuously ingests breaking news from live sources (NewsAPI), applies NLP topic modeling in real time using **Apache Spark**, stores results in **MongoDB**, and visualizes insights via a **FastAPI** + **Streamlit** frontend.
+The **News Stream Recommender** continuously ingests breaking news from live sources (NewsAPI), applies NLP topic modeling in real time using **OpenAI**, stores results in **MongoDB**, and visualizes insights via a **FastAPI** + **Streamlit** frontend.
 
 ---
 
 ## 🚀 Features
 
 - 🌍 **Real-Time Ingestion** – fetches live headlines via Kafka producers  
-- 🧩 **Streaming NLP Pipeline** – tokenization, TF-IDF, LDA topic modeling  
+- 🧩 **Streaming NLP Pipeline** – OpenAI  
 - 💾 **Data Persistence** – stores clustered topics in MongoDB  
 - ⚡ **RESTful API** – built with FastAPI for frontend data access  
 - 📊 **Interactive Dashboard** – live topic view via Streamlit  
@@ -42,7 +42,7 @@ The **News Stream Recommender** continuously ingests breaking news from live sou
 | Layer | Technology |
 |-------|-------------|
 | Ingestion | **Kafka**, **NewsAPI**, **RSS Feeds** |
-| Processing | **Apache Spark** (Structured Streaming, TF-IDF, LDA) |
+| Processing | **Apache Spark** (OPENAI for deterministic mapping between title → topic) |
 | Storage | **MongoDB** |
 | Backend | **FastAPI** |
 | Frontend | **Streamlit** |

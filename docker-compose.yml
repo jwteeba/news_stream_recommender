@@ -40,6 +40,7 @@ services:
     volumes:
       - ./src/news_stream_recommender/spark_app:/app
     depends_on: [kafka, mongo]
+    env_file: .env
     restart: on-failure
     command: /opt/spark/bin/spark-submit /app/spark_streaming.py
     networks: [news_network]

@@ -1,17 +1,35 @@
+import os
 import time
 import socket
 import logging
 import tempfile
-import os
-from pyspark.sql import SparkSession
-from pyspark.sql.functions import from_json, col, concat, lit, lower, regexp_replace
-from pyspark.sql.types import StructType, StructField, StringType
-from pyspark.ml.feature import StopWordsRemover, CountVectorizer, RegexTokenizer
-from pyspark.ml.clustering import LDA
+import openai
+from dotenv import load_dotenv
 from pymongo import MongoClient
+from pyspark.sql import SparkSession
+from pyspark.sql.functions import (
+    from_json,
+    col,
+    concat,
+    lit,
+    lower,
+    regexp_replace,
+    monotonically_increasing_id,
+)
+from pyspark.sql.types import StructType, StructField, StringType
+from pyspark.ml.feature import RegexTokenizer, StopWordsRemover
+
+load_dotenv()
 
 
 class NewsStreamProcessor:
+    """Real-time news stream processor that ingests Kafka messages, applies NLP preprocessing,
+    generates AI-powered topic classifications, and stores results in MongoDB.
+
+    This processor handles the complete pipeline from raw news data to categorized topics,
+    integrating Spark Structured Streaming, OpenAI API, and MongoDB for scalable news analysis.
+    """
+
     def __init__(self):
         self.setup_logging()
         self.logger = logging.getLogger(self.__class__.__name__)
@@ -19,18 +37,28 @@ class NewsStreamProcessor:
         self.mongo_collection = None
         self.schema = self._create_schema()
 
+        self.openai_client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+
     def setup_logging(self):
+        """Configure logging with both console and file handlers for comprehensive monitoring.
+
+        Sets up INFO level logging with timestamped format to track processing status,
+        errors, and system events during streaming operations.
+        """
         log_file = os.path.join(tempfile.gettempdir(), "news_stream.log")
         logging.basicConfig(
             level=logging.INFO,
             format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-            handlers=[
-                logging.StreamHandler(),
-                logging.FileHandler(log_file),
-            ],
+            handlers=[logging.StreamHandler(), logging.FileHandler(log_file)],
         )
 
     def _create_schema(self):
+        """Define the expected schema for incoming Kafka news messages.
+
+        Returns:
+            StructType: Spark SQL schema matching NewsAPI JSON structure with fields
+                       for source, author, title, description, url, image, timestamp, and content.
+        """
         return StructType(
             [
                 StructField("source", StringType(), True),
@@ -45,6 +73,17 @@ class NewsStreamProcessor:
         )
 
     def wait_for_kafka(self, timeout=300):
+        """Wait for Kafka broker to become available before starting stream processing.
+
+        Args:
+            timeout (int): Maximum seconds to wait for Kafka connection (default: 300)
+
+        Returns:
+            bool: True if Kafka is ready
+
+        Raises:
+            Exception: If Kafka connection timeout is exceeded
+        """
         start_time = time.time()
         while time.time() - start_time < timeout:
             try:
@@ -62,20 +101,32 @@ class NewsStreamProcessor:
         raise Exception("Kafka connection timeout")
 
     def initialize_connections(self):
+        """Initialize Spark session and MongoDB connection after Kafka readiness check.
+
+        Creates SparkSession for stream processing and establishes MongoDB client
+        connection to the 'news.topics' collection for storing processed results.
+        """
         self.wait_for_kafka()
         time.sleep(10)
-
         self.spark = SparkSession.builder.appName("NewsStreamProcessor").getOrCreate()
-
         mongo_client = MongoClient("mongodb://mongo:27017/")
         self.mongo_collection = mongo_client["news"]["topics"]
 
     def preprocess_text(self, df):
+        """Apply NLP preprocessing pipeline to clean and tokenize news text data.
+
+        Args:
+            df: Spark DataFrame containing news records with title and description
+
+        Returns:
+            DataFrame: Processed DataFrame with additional columns for cleaned text,
+                      tokenized words, and filtered tokens (stopwords removed)
+        """
         text_df = df.withColumn(
             "text",
             lower(
                 regexp_replace(
-                    concat(col("title"), lit(" "), col("content")),
+                    concat(col("title"), lit(" "), col("description")),
                     "[^a-zA-Z\\s]",
                     "",
                 )
@@ -83,127 +134,113 @@ class NewsStreamProcessor:
         )
 
         tokenizer = RegexTokenizer(inputCol="text", outputCol="words", pattern="\\W")
-        words_df = tokenizer.transform(text_df)
-
-        custom_stop_words = StopWordsRemover.loadDefaultStopWords("english") + [
-            "said",
-            "says",
-            "according",
-            "new",
-            "news",
-            "report",
-            "reports",
-            "reuters",
-            "ap",
-            "cnn",
-            "bbc",
-            "former",
-            "current",
-            "latest",
-            "today",
-            "yesterday",
-            "week",
-            "month",
-            "year",
-            "time",
-            "people",
-            "man",
-            "woman",
-            "person",
-            "one",
-            "two",
-            "three",
-            "first",
-            "last",
-            "also",
-            "would",
-            "could",
-            "may",
-        ]
+        tokenized_df = tokenizer.transform(text_df)
 
         remover = StopWordsRemover(
-            inputCol="words", outputCol="filtered", stopWords=custom_stop_words
+            inputCol="words",
+            outputCol="filtered",
+            stopWords=StopWordsRemover.loadDefaultStopWords("english"),
         )
-        return remover.transform(words_df)
+        return remover.transform(tokenized_df)
 
-    def apply_topic_modeling(self, filtered_df):
-        cv = CountVectorizer(
-            inputCol="filtered", outputCol="features", minDF=2, vocabSize=1000
-        )
-        cv_model = cv.fit(filtered_df)
-        vectorized_df = cv_model.transform(filtered_df)
-
-        lda = LDA(k=6, maxIter=20, seed=42)
-        lda_model = lda.fit(vectorized_df)
-        predictions_df = lda_model.transform(vectorized_df)
-
-        return predictions_df, lda_model, cv_model.vocabulary
-
-    def generate_topic_names(self, lda_model, vocab, epoch_id):
-        topics = lda_model.describeTopics(15)
-        self.logger.info(f"Processing topics for batch {epoch_id}")
-
-        topic_names = {}
-        for row in topics.collect():
-            topic_id = row["topic"]
-            word_indices = row["termIndices"]
-            words = [vocab[i] for i in word_indices if len(vocab[i]) > 2]
-
-            meaningful_words = [
-                w for w in words[:5] if w not in ["news", "report", "story", "article"]
-            ]
-            topic_name = (
-                " ".join(meaningful_words[:2]).title()
-                if meaningful_words
-                else f"Topic {topic_id}"
+    def generate_topic(self, title, description):
+        """Calls OpenAI for one record and returns a clean topic string."""
+        try:
+            prompt = (
+                f"Generate a short, meaningful topic (max 6 words) "
+                f"that summarizes this news item.\n\n"
+                f"Title: {title}\n"
+                f"Description: {description}"
             )
 
-            topic_names[topic_id] = topic_name
-            self.logger.debug(
-                f"Topic {topic_id} ({topic_name}): {', '.join(words[:10])}"
+            response = self.openai_client.chat.completions.create(
+                model="gpt-4o-mini",
+                messages=[
+                    {
+                        "role": "system",
+                        "content": "You are a professional news categorizer.",
+                    },
+                    {"role": "user", "content": prompt},
+                ],
+                max_tokens=30,
+                temperature=0.4,
             )
 
-        return topic_names
+            topic = response.choices[0].message.content.strip()
+            return topic.replace("\n", " ").replace('"', "").replace("'", "").strip()
+        except Exception as e:
+            self.logger.error(f"OpenAI API error: {e}")
+            return "Unknown Topic"
 
-    def save_to_mongo(self, predictions_df, topic_names):
-        for row in predictions_df.select(
-            "source",
-            "author",
-            "title",
-            "description",
-            "url",
-            "urlToImage",
-            "publishedAt",
-            "content",
-            "filtered",
-            "topicDistribution",
-        ).collect():
-            topic_probs = row.topicDistribution.toArray()
-            dominant_topic = int(topic_probs.argmax())
+    def save_to_mongo(self, df):
+        """Process DataFrame records, generate AI topics, and persist to MongoDB.
+
+        For each news record, calls OpenAI API to generate topic classification,
+        then stores the enriched document in MongoDB with deterministic ordering.
+
+        Args:
+            df: Spark DataFrame containing preprocessed news records
+        """
+        rows = (
+            df.withColumn("row_id", monotonically_increasing_id())
+            .orderBy("row_id")
+            .select(
+                "row_id",
+                "source",
+                "author",
+                "title",
+                "description",
+                "url",
+                "urlToImage",
+                "publishedAt",
+                "content",
+            )
+            .collect()
+        )
+
+        for row in rows:
+            title = row.title or ""
+            description = row.description or ""
+            topic = self.generate_topic(title, description)
 
             doc = {
-                "title": row.title,
-                "description": row.description,
+                "row_id": int(row.row_id),
+                "title": title,
+                "description": description,
                 "url": row.url,
                 "urlToImage": row.urlToImage,
                 "publishedAt": row.publishedAt,
                 "content": row.content,
                 "source": row.source,
                 "author": row.author,
-                "filtered_words": row.filtered,
-                "topic": topic_names.get(dominant_topic, "Unknown"),
+                "topic": topic,
             }
+
             self.mongo_collection.insert_one(doc)
+            self.logger.info(f"[Topic: {topic}] — {title[:70]}")
 
     def process_batch(self, df, epoch_id):
-        if df.count() > 0:
+        """Process a single micro-batch from the Kafka stream.
+
+        Applies text preprocessing and saves results to MongoDB if batch contains data.
+
+        Args:
+            df: Spark DataFrame containing the current batch of news records
+            epoch_id: Unique identifier for this streaming batch
+        """
+        count = df.count()
+        if count > 0:
+            self.logger.info(f"Processing batch {epoch_id} with {count} records...")
             filtered_df = self.preprocess_text(df)
-            predictions_df, lda_model, vocab = self.apply_topic_modeling(filtered_df)
-            topic_names = self.generate_topic_names(lda_model, vocab, epoch_id)
-            self.save_to_mongo(predictions_df, topic_names)
-            self.logger.info(f"Processed batch {epoch_id} with {df.count()} records")
+            self.save_to_mongo(filtered_df)
+            self.logger.info(f"Batch {epoch_id} completed.")
 
     def start_streaming(self):
+        """Start the main Spark Structured Streaming pipeline.
+
+        Configures Kafka source, applies JSON parsing and filtering, then processes
+        micro-batches every 15 seconds with checkpoint recovery for fault tolerance.
+        """
         df = (
             self.spark.readStream.format("kafka")
             .option("kafka.bootstrap.servers", "kafka:9092")
@@ -223,7 +260,7 @@ class NewsStreamProcessor:
             .option(
                 "checkpointLocation", os.path.join(tempfile.gettempdir(), "checkpoint")
             )
-            .trigger(processingTime="10 seconds")
+            .trigger(processingTime="15 seconds")
             .start()
         )
 
@@ -231,6 +268,11 @@ class NewsStreamProcessor:
 
 
 def main():
+    """Entry point for the news stream processing application.
+
+    Initializes the NewsStreamProcessor, establishes connections, and starts
+    the continuous streaming pipeline for real-time news topic classification.
+    """
     processor = NewsStreamProcessor()
     processor.initialize_connections()
     processor.start_streaming()

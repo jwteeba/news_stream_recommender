@@ -13,7 +13,8 @@ dependencies = [
     "pymongo (>=4.15.3,<5.0.0)",
     "python-dotenv (>=1.0.0,<2.0.0)"
 ]
-package-mode = false 
+[tool.poetry]
+package-mode = false
 
 
 [build-system]

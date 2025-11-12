@@ -8,14 +8,14 @@ authors = [
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
+    "fastapi (>=0.121.1,<0.122.0)",
+    "uvicorn (>=0.38.0,<0.39.0)",
+    "python-dotenv (>=1.2.1,<2.0.0)",
+    "pymongo (>=4.15.4,<5.0.0)",
+    "pyopenssl (>=25.3.0,<26.0.0)",
+    "cryptography (>=46.0.3,<47.0.0)"
 ]
 
-[tool.poetry]
-packages = [{include = "news_stream_recommender", from = "src"}]
-
-[tool.flake8]
-max-line-length = 120
-ignore = ["E501", "E203", "F841", "W503"]
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]

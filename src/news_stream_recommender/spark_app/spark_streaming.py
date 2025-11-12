@@ -147,7 +147,7 @@ class NewsStreamProcessor:
         """Calls OpenAI for one record and returns a clean topic string."""
         try:
             prompt = (
-                f"Generate a short, meaningful topic (max 6 words) "
+                f"Generate a short, meaningful topic (max 4 words) "
                 f"that summarizes this news item.\n\n"
                 f"Title: {title}\n"
                 f"Description: {description}"

@@ -20,13 +20,13 @@ services:
     depends_on: [zookeeper]
     networks: [news_network]
 
-  mongo:
-    image: mongo:5
-    container_name: mongodb
-    ports: ["27017:27017"]
-    volumes:
-      - mongo_data:/data/db
-    networks: [news_network]
+  # mongo:
+  #   image: mongo:5
+  #   container_name: mongodb
+  #   ports: ["27017:27017"]
+  #   volumes:
+  #     - mongo_data:/data/db
+  #   networks: [news_network]
 
   producer:
     build: src/news_stream_recommender/kafka_producer
@@ -39,7 +39,7 @@ services:
     build: src/news_stream_recommender/spark_app
     volumes:
       - ./src/news_stream_recommender/spark_app:/app
-    depends_on: [kafka, mongo]
+    depends_on: [kafka]
     env_file: .env
     restart: on-failure
     command: /opt/spark/bin/spark-submit /app/spark_streaming.py
@@ -48,9 +48,9 @@ services:
   backend:
     build: src/news_stream_recommender/backend
     ports: ["8000:8000"]
-    depends_on: [mongo]
+    depends_on: []
     env_file: .env
-    command: ["sh", "-c", "poetry add uvicorn && poetry run uvicorn app.main:app --host 0.0.0.0 --port 8000"]
+    command: ["poetry", "run", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
     networks: [news_network]
 
   frontend:

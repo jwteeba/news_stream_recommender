@@ -5,7 +5,8 @@ import logging
 import tempfile
 import openai
 from dotenv import load_dotenv
-from pymongo import MongoClient
+from pymongo.mongo_client import MongoClient
+from pymongo.server_api import ServerApi
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import (
     from_json,
@@ -109,7 +110,7 @@ class NewsStreamProcessor:
         self.wait_for_kafka()
         time.sleep(10)
         self.spark = SparkSession.builder.appName("NewsStreamProcessor").getOrCreate()
-        mongo_client = MongoClient("mongodb://mongo:27017/")
+        mongo_client = self.get_mongo_client(os.getenv("MONGO_URI"))
         self.mongo_collection = mongo_client["news"]["topics"]
 
     def preprocess_text(self, df):
@@ -265,6 +266,25 @@ class NewsStreamProcessor:
         )
 
         query.awaitTermination()
+
+
+    def get_mongo_client(self, uri: str) -> MongoClient:
+        """Create Mongo Client
+
+        Args:
+            uri (str): Mongo connection uri
+
+        Returns:
+            MongoClient: MongoDB Client
+        """
+        client = MongoClient(uri, server_api=ServerApi('1'))
+        try:
+            client.admin.command('ping')
+            logging.info("Successfully connected to MongoDB!")
+            return client
+        except Exception as e:
+            logging.error(f"Failed to connect to MongoDB: {e}")
+            raise
 
 
 def main():

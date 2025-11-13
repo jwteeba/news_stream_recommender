@@ -5,6 +5,7 @@ import pandas as pd
 import logging
 import tempfile
 from datetime import datetime
+from dotenv import load_dotenv
 
 log_file = os.path.join(tempfile.gettempdir(), "news_stream.log")
 logging.basicConfig(
@@ -24,6 +25,7 @@ class NewsRecommenderApp:
     def __init__(self):
         """Initialize the NewsRecommenderApp with configuration and setup."""
         self.fastapi_url = os.getenv("FASTAPI_URL", "http://backend:8000")
+        print(self.fastapi_url)
         self.logger = logging.getLogger(self.__class__.__name__)
         self.setup_page()
 
@@ -192,6 +194,7 @@ def main():
 
     Creates and runs the NewsRecommenderApp instance.
     """
+    load_dotenv()
     app = NewsRecommenderApp()
     app.run()
 

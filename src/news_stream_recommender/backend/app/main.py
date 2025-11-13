@@ -13,6 +13,7 @@ logging.basicConfig(
     handlers=[logging.StreamHandler(), logging.FileHandler(log_file)],
 )
 
+
 def get_mongo_client(uri: str) -> MongoClient:
     """Create Mongo Client
 
@@ -22,9 +23,9 @@ def get_mongo_client(uri: str) -> MongoClient:
     Returns:
         MongoClient: MongoDB Client
     """
-    client = MongoClient(uri, server_api=ServerApi('1'))
+    client = MongoClient(uri, server_api=ServerApi("1"))
     try:
-        client.admin.command('ping')
+        client.admin.command("ping")
         logging.info("Successfully connected to MongoDB!")
         return client
     except Exception as e:

@@ -267,7 +267,6 @@ class NewsStreamProcessor:
 
         query.awaitTermination()
 
-
     def get_mongo_client(self, uri: str) -> MongoClient:
         """Create Mongo Client
 
@@ -277,9 +276,9 @@ class NewsStreamProcessor:
         Returns:
             MongoClient: MongoDB Client
         """
-        client = MongoClient(uri, server_api=ServerApi('1'))
+        client = MongoClient(uri, server_api=ServerApi("1"))
         try:
-            client.admin.command('ping')
+            client.admin.command("ping")
             logging.info("Successfully connected to MongoDB!")
             return client
         except Exception as e:

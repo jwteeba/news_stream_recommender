@@ -47,3 +47,43 @@ The **News Stream Recommender** continuously ingests breaking news from live sou
 | Backend | **FastAPI** |
 | Frontend | **Streamlit** |
 | Management | **Docker Compose**, **Poetry** |
+
+# 🧪 Testing
+
+This project includes a comprehensive test suite with both simple and advanced testing options.
+
+## 🚀 Quick Start
+
+### Run Simple Tests (Recommended)
+
+```bash
+# Run all simple tests
+make test
+pytest --verbose
+
+# Run with coverage
+pytest --coverage --verbose
+
+# Run specific component
+make test-spark
+pytest tests/test_spark_streaming.py --verbose
+```
+
+## 🎯 Test Coverage
+
+The simple test suite covers:
+
+- ✅ **Core Business Logic** - Data processing, filtering, validation
+- ✅ **API Structure** - Endpoint responses and data formats
+- ✅ **Utility Functions** - Date formatting, text processing, URL validation
+- ✅ **Error Handling** - Exception handling patterns
+- ✅ **Data Flow** - Basic integration between components
+
+## 🔧 Installation
+
+```bash
+# Install test dependencies
+pip install -r requirements-test.txt
+
+# Or using optional dependencies
+pip install -e ".[test]"

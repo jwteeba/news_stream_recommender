@@ -34,3 +34,6 @@ frontend/__pycache__/
 
 # Local environment
 .env
+
+# Test
+.coverage

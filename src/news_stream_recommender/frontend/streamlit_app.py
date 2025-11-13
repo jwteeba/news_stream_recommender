@@ -43,11 +43,13 @@ class NewsRecommenderApp:
         Returns:
             str: Formatted date string (e.g., "November 07, 2025") or original string if parsing fails
         """
+        if iso_date is None:
+            return None
         try:
             return datetime.fromisoformat(iso_date.replace("Z", "+00:00")).strftime(
                 "%B %d, %Y"
             )
-        except (ValueError, TypeError):
+        except (ValueError, TypeError, AttributeError):
             return iso_date
 
     @st.cache_data(ttl=300)

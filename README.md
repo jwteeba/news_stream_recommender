@@ -79,11 +79,8 @@ The simple test suite covers:
 - ✅ **Error Handling** - Exception handling patterns
 - ✅ **Data Flow** - Basic integration between components
 
-## 🔧 Installation
+## 🔧 Install Test dependencies
 
 ```bash
-# Install test dependencies
-pip install -r requirements-test.txt
-
-# Or using optional dependencies
-pip install -e ".[test]"
+poetry install
+```

@@ -112,6 +112,7 @@ class NewsStreamProcessor:
         self.spark = SparkSession.builder.appName("NewsStreamProcessor").getOrCreate()
         mongo_client = self.get_mongo_client(os.getenv("MONGO_URI"))
         self.mongo_collection = mongo_client["news"]["topics"]
+        self.mongo_collection.create_index("url", unique=True, sparse=True)
 
     def preprocess_text(self, df):
         """Apply NLP preprocessing pipeline to clean and tokenize news text data.
@@ -176,11 +177,8 @@ class NewsStreamProcessor:
     def save_to_mongo(self, df):
         """Process DataFrame records, generate AI topics, and persist to MongoDB.
 
-        For each news record, calls OpenAI API to generate topic classification,
-        then stores the enriched document in MongoDB with deterministic ordering.
-
-        Args:
-            df: Spark DataFrame containing preprocessed news records
+        Only inserts a news document if it is not already in MongoDB.
+        Uniqueness is determined by the article URL.
         """
         rows = (
             df.withColumn("row_id", monotonically_increasing_id())
@@ -202,13 +200,28 @@ class NewsStreamProcessor:
         for row in rows:
             title = row.title or ""
             description = row.description or ""
+            url = row.url or ""
+
+            if url:
+                existing = self.mongo_collection.find_one({"url": url})
+                if existing:
+                    self.logger.info(f"Skipping duplicate: {title[:70]}")
+                    continue
+            else:
+                existing = self.mongo_collection.find_one(
+                    {"title": title, "publishedAt": row.publishedAt}
+                )
+                if existing:
+                    self.logger.info(f"Skipping duplicate (title/time): {title[:70]}")
+                    continue
+
             topic = self.generate_topic(title, description)
 
             doc = {
                 "row_id": int(row.row_id),
                 "title": title,
                 "description": description,
-                "url": row.url,
+                "url": url,
                 "urlToImage": row.urlToImage,
                 "publishedAt": row.publishedAt,
                 "content": row.content,
@@ -218,7 +231,7 @@ class NewsStreamProcessor:
             }
 
             self.mongo_collection.insert_one(doc)
-            self.logger.info(f"[Topic: {topic}] — {title[:70]}")
+            self.logger.info(f"[INSERTED] [Topic: {topic}] — {title[:70]}")
 
     def process_batch(self, df, epoch_id):
         """Process a single micro-batch from the Kafka stream.

@@ -1,7 +1,7 @@
 import os
 import logging
 import tempfile
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends, HTTPException
 from pymongo.mongo_client import MongoClient
 from pymongo.server_api import ServerApi
 from dotenv import load_dotenv
@@ -35,12 +35,36 @@ def get_mongo_client(uri: str) -> MongoClient:
 
 load_dotenv()
 mongo_client = os.getenv("MONGO_URI")
+
+
+def get_db():
+    """Return the MongoDB database via FastAPI DI."""
+    client = get_mongo_client(mongo_client)
+    return client.news
+
+
 app = FastAPI()
-client = get_mongo_client(mongo_client)
-db = client.news
 
 
 @app.get("/trending")
-def trending_topics():
-    topics = list(db.topics.find({}, {"_id": 0}).limit(20))
-    return {"topics": topics}
+def trending_topics(db=Depends(get_db)):
+    try:
+        pipeline = [
+            {"$sort": {"publishedAt": -1}},  # newest first
+            {
+                "$group": {
+                    "_id": "$topic",
+                    "doc": {"$first": "$$ROOT"},  # newest doc for each topic
+                }
+            },
+            {"$replaceRoot": {"newRoot": "$doc"}},
+            {"$project": {"_id": 0}},
+            {"$sort": {"publishedAt": -1}},  # optional re-sort
+        ]
+
+        topics = list(db.topics.aggregate(pipeline))
+        return {"topics": topics}
+
+    except Exception as e:
+        logging.error(f"Aggregation error: {e}")
+        raise HTTPException(status_code=500, detail="Internal Server Error")

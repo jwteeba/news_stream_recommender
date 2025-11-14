@@ -40,7 +40,7 @@ jobs:
     - name: Run security checks with Bandit
       run: |
         poetry run bandit -r src/
-          - uses: actions/checkout@main
+    - uses: actions/checkout@main
     - name: Run Safety CLI to check for vulnerabilities
       uses: pyupio/safety-action@v1
       with:

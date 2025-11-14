@@ -4,6 +4,8 @@ from unittest.mock import Mock, patch
 import mongomock
 import pytest
 
+from news_stream_recommender.backend.app.main import app, get_db
+
 
 @pytest.fixture
 def mock_env_vars():
@@ -59,3 +61,20 @@ def mock_openai_response():
     mock_response.choices = [Mock()]
     mock_response.choices[0].message.content = "Technology"
     return mock_response
+
+
+@pytest.fixture
+def mock_db():
+    mock = Mock()
+    mock.topics.find.return_value.limit.return_value = [
+        {"title": "Test1", "topic": "Tech"},
+        {"title": "Test2", "topic": "Sports"},
+    ]
+    return mock
+
+
+@pytest.fixture(autouse=True)
+def override_db(mock_db):
+    app.dependency_overrides[get_db] = lambda: mock_db
+    yield
+    app.dependency_overrides.clear()

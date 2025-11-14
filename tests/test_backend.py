@@ -14,7 +14,7 @@ def client():
 @pytest.fixture
 def mock_db():
     mock = Mock()
-    mock.topics.find.return_value.limit.return_value = [
+    mock.topics.aggregate.return_value = [
         {
             "title": "Test Article 1",
             "description": "Test description 1",
@@ -40,8 +40,8 @@ def override_db(mock_db):
     app.dependency_overrides.clear()
 
 
-def test_trending_topics_success():
-    client = TestClient(app)
+def test_trending_topics_success(client):
+
     response = client.get("/trending")
 
     assert response.status_code == 200
@@ -50,7 +50,7 @@ def test_trending_topics_success():
 
 def test_trending_topics_empty(client, mock_db):
     """Should return an empty list when no topics exist."""
-    mock_db.topics.find.return_value.limit.return_value = []
+    mock_db.topics.aggregate.return_value = []
 
     response = client.get("/trending")
 
@@ -86,7 +86,7 @@ def test_get_mongo_client_failure(mock_client):
 
 def test_trending_topics_database_error(client, mock_db):
     """Should raise exception if MongoDB query throws error."""
-    mock_db.topics.find.side_effect = Exception("Database error")
+    mock_db.topics.aggregate.side_effect = Exception("Database error")
 
     response = client.get("/trending")
 

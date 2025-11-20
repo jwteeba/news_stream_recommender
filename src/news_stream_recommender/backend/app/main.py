@@ -50,16 +50,16 @@ app = FastAPI()
 def trending_topics(db=Depends(get_db)):
     try:
         pipeline = [
-            {"$sort": {"publishedAt": -1}},  # newest first
+            {"$sort": {"publishedAt": -1}},
             {
                 "$group": {
                     "_id": "$topic",
-                    "doc": {"$first": "$$ROOT"},  # newest doc for each topic
+                    "doc": {"$first": "$$ROOT"},
                 }
             },
             {"$replaceRoot": {"newRoot": "$doc"}},
             {"$project": {"_id": 0}},
-            {"$sort": {"publishedAt": -1}},  # optional re-sort
+            {"$sort": {"publishedAt": -1}},
         ]
 
         topics = list(db.topics.aggregate(pipeline))

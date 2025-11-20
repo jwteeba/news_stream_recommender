@@ -27,7 +27,7 @@ The **News Stream Recommender** continuously ingests breaking news from live sou
 - ⚡ **RESTful API** – built with FastAPI for frontend data access  
 - 📊 **Interactive Dashboard** – live topic view via Streamlit  
 - 🐳 **Fully Containerized** – built and orchestrated using Docker Compose  
-- 📦 **Poetry-Managed** – clean and reproducible Python environments  
+- 📦 **Poetry-Managed** – clean and reproducible Python environments
 
 ---
 

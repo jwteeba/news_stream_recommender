@@ -148,12 +148,22 @@ class NewsStreamProcessor:
     def generate_topic(self, title, description):
         """Calls OpenAI for one record and returns a clean topic string."""
         try:
-            prompt = (
-                f"Generate a short, meaningful topic (max 4 words) "
-                f"that summarizes this news item.\n\n"
-                f"Title: {title}\n"
-                f"Description: {description}"
-            )
+
+            TOPIC_CLASSIFIER_PROMPT = f"""
+                You are a classifier that assigns a single meaningful topic to a news item.
+                You must choose exactly one topic from the allowed list:
+                ["Sport", "Entertainment", "Politics", "Weather", "Economy", "Legal/Justice", "Technology"]
+
+                Follow the rules:
+                - Always return one topic only.
+                - Do NOT invent new categories.
+                - Base your decision solely on the title and description.
+                - If the content is unclear, choose the closest reasonable topic.
+                - Return ONLY the topic, nothing else \n.
+
+                Title: {title} \n
+                Description: {description}
+            """
 
             response = self.openai_client.chat.completions.create(
                 model="gpt-4o-mini",
@@ -162,7 +172,7 @@ class NewsStreamProcessor:
                         "role": "system",
                         "content": "You are a professional news categorizer.",
                     },
-                    {"role": "user", "content": prompt},
+                    {"role": "user", "content": TOPIC_CLASSIFIER_PROMPT},
                 ],
                 max_tokens=30,
                 temperature=0.4,

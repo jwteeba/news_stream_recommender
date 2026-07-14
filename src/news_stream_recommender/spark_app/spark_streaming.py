@@ -3,6 +3,7 @@ import time
 import socket
 import logging
 import tempfile
+from openai import OpenAI
 from dotenv import load_dotenv
 from pymongo.mongo_client import MongoClient
 from pymongo.server_api import ServerApi
@@ -38,7 +39,7 @@ class NewsStreamProcessor:
         self.mongo_collection = None
         self.schema = self._create_schema()
 
-        self.openai_client = NewsRecommenderApp().openai_api_key
+        self.openai_client = OpenAI(api_key=NewsRecommenderApp().openai_api_key)
 
     def setup_logging(self):
         """Configure logging with both console and file handlers for comprehensive monitoring.

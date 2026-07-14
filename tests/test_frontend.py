@@ -117,18 +117,33 @@ class TestNewsRecommenderApp:
 
     @patch("streamlit.sidebar.title")
     @patch("streamlit.sidebar.button")
+    @patch("streamlit.sidebar.text_input")
     @patch("streamlit.sidebar.markdown")
     @patch("streamlit.sidebar.write")
     def test_render_sidebar(
-        self, mock_write, mock_markdown, mock_button, mock_title, app
+        self,
+        app,
+        mock_write,
+        mock_markdown,
+        mock_text_input,
+        mock_button,
+        mock_title,
     ):
         """Test sidebar rendering"""
+
         mock_button.return_value = True
+        mock_text_input.return_value = "fake-api-key"
 
-        result = app.render_sidebar()
+        refresh, api_key = app.render_sidebar()
 
-        assert result is True
+        assert refresh is True
+        assert api_key == "fake-api-key"
+
         mock_title.assert_called_once_with("🧭 Controls")
+        mock_text_input.assert_called_once_with(
+            "🔑 Enter your OpenAI API key:",
+            type="password",
+        )
         mock_button.assert_called_once_with("🔄 Refresh Data")
 
     @patch("streamlit.columns")

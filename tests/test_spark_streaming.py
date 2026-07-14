@@ -9,12 +9,28 @@ from news_stream_recommender.spark_app.spark_streaming import NewsStreamProcesso
 class TestNewsStreamProcessor:
     """Test suite for Spark News Stream Processor"""
 
+    @pytest.fixture(autouse=True)
+    def setup_env(self, monkeypatch):
+        """Automatically set environment variables for every single test."""
+        monkeypatch.setenv("OPENAI_API_KEY", "test-api-key")
+
     @pytest.fixture
-    def processor(self, mock_env_vars):
-        """Create NewsStreamProcessor instance with mocked environment"""
-        with patch("news_stream_recommender.spark_app.spark_streaming.load_dotenv"):
-            with patch("openai.OpenAI"):
-                return NewsStreamProcessor()
+    def processor(self):
+        """Create NewsStreamProcessor instance with active mocks."""
+        # Use 'yield' to keep the context managers alive for the duration of the test
+        with (
+            patch("news_stream_recommender.spark_app.spark_streaming.load_dotenv"),
+            patch(
+                "news_stream_recommender.spark_app.spark_streaming.OpenAI"
+            ) as mock_openai_cls,
+        ):
+
+            proc = NewsStreamProcessor()
+
+            # Extract and expose the mock client instance so tests can assign return values to it
+            proc.openai_client = mock_openai_cls.return_value
+
+            yield proc
 
     def test_init(self, processor):
         """Test NewsStreamProcessor initialization"""

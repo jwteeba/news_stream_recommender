@@ -7,7 +7,6 @@ import tempfile
 from datetime import datetime
 from dotenv import load_dotenv
 
-
 log_file = os.path.join(tempfile.gettempdir(), "news_stream.log")
 logging.basicConfig(
     level=logging.INFO,
@@ -77,7 +76,9 @@ class NewsRecommenderApp:
             bool: True if refresh button was clicked, False otherwise
         """
         st.sidebar.title("🧭 Controls")
-        openai_api_key = st.sidebar.text_input("🔑 Enter your OpenAI API key:", type="password" )
+        openai_api_key = st.sidebar.text_input(
+            "🔑 Enter your OpenAI API key:", type="password"
+        )
         refresh = st.sidebar.button("🔄 Refresh Data")
         st.sidebar.markdown("---")
         st.sidebar.write("💡 Use filters or search to explore news topics")

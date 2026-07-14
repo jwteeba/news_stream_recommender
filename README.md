@@ -15,6 +15,8 @@
 
 ## 🧠 Overview
 
+[See it in Action](https://newsstreamrecommender-fsgfjw8zpekqysdwjcob7h.streamlit.app)
+
 The **News Stream Recommender** continuously ingests breaking news from live sources (NewsAPI), applies NLP topic modeling in real time using **OpenAI**, stores results in **MongoDB**, and visualizes insights via a **FastAPI** + **Streamlit** frontend.
 
 ---

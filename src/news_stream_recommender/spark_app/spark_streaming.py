@@ -3,7 +3,6 @@ import time
 import socket
 import logging
 import tempfile
-import openai
 from dotenv import load_dotenv
 from pymongo.mongo_client import MongoClient
 from pymongo.server_api import ServerApi
@@ -19,8 +18,7 @@ from pyspark.sql.functions import (
 )
 from pyspark.sql.types import StructType, StructField, StringType
 from pyspark.ml.feature import RegexTokenizer, StopWordsRemover
-from frontend.streamlit_app import NewsRecommenderApp
-
+from news_stream_recommender.frontend.streamlit_app import NewsRecommenderApp
 
 load_dotenv()
 

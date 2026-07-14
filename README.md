@@ -31,12 +31,6 @@ The **News Stream Recommender** continuously ingests breaking news from live sou
 
 ---
 
-## 🏗️ Architecture
-
-![Design](images/news_feed_data_pipeline.png)
-
----
-
 ## ⚙️ Tech Stack
 
 | Layer | Technology |
@@ -48,11 +42,12 @@ The **News Stream Recommender** continuously ingests breaking news from live sou
 | Frontend | **Streamlit** |
 | Management | **Docker Compose**, **Poetry** |
 
-# 🧪 Testing
 
-This project includes a comprehensive test suite with both simple and advanced testing options.
+## Run
 
-## 🚀 Quick Start
+```bash
+cd src/news_stream_recommender/frontend && streamlit run streamlit_app.py 
+```
 
 ### Run Simple Tests (Recommended)
 
@@ -68,16 +63,6 @@ pytest --coverage --verbose
 make test-spark
 pytest tests/test_spark_streaming.py --verbose
 ```
-
-## 🎯 Test Coverage
-
-The simple test suite covers:
-
-- ✅ **Core Business Logic** - Data processing, filtering, validation
-- ✅ **API Structure** - Endpoint responses and data formats
-- ✅ **Utility Functions** - Date formatting, text processing, URL validation
-- ✅ **Error Handling** - Exception handling patterns
-- ✅ **Data Flow** - Basic integration between components
 
 ## 🔧 Install Test dependencies
 

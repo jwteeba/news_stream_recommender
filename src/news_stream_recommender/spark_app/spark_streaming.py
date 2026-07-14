@@ -19,6 +19,8 @@ from pyspark.sql.functions import (
 )
 from pyspark.sql.types import StructType, StructField, StringType
 from pyspark.ml.feature import RegexTokenizer, StopWordsRemover
+from frontend.streamlit_app import NewsRecommenderApp
+
 
 load_dotenv()
 
@@ -38,7 +40,7 @@ class NewsStreamProcessor:
         self.mongo_collection = None
         self.schema = self._create_schema()
 
-        self.openai_client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+        self.openai_client = NewsRecommenderApp().openai_api_key
 
     def setup_logging(self):
         """Configure logging with both console and file handlers for comprehensive monitoring.

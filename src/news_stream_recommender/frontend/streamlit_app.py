@@ -7,6 +7,7 @@ import tempfile
 from datetime import datetime
 from dotenv import load_dotenv
 
+
 log_file = os.path.join(tempfile.gettempdir(), "news_stream.log")
 logging.basicConfig(
     level=logging.INFO,
@@ -24,7 +25,8 @@ class NewsRecommenderApp:
 
     def __init__(self):
         """Initialize the NewsRecommenderApp with configuration and setup."""
-        self.fastapi_url = os.getenv("FASTAPI_URL", "http://backend:8000")
+        self.fastapi_url = os.getenv("FASTAPI_URL")
+        self.openai_api_key = ""
         print(self.fastapi_url)
         self.logger = logging.getLogger(self.__class__.__name__)
         self.setup_page()
@@ -75,10 +77,11 @@ class NewsRecommenderApp:
             bool: True if refresh button was clicked, False otherwise
         """
         st.sidebar.title("🧭 Controls")
+        openai_api_key = st.sidebar.text_input("🔑 Enter your OpenAI API key:", type="password" )
         refresh = st.sidebar.button("🔄 Refresh Data")
         st.sidebar.markdown("---")
         st.sidebar.write("💡 Use filters or search to explore news topics")
-        return refresh
+        return refresh, openai_api_key
 
     def render_filters(self, df):
         """Render topic selection and keyword search filters.
@@ -167,10 +170,12 @@ class NewsRecommenderApp:
         Orchestrates the entire application by rendering components,
         fetching data, applying filters, and displaying results.
         """
-        refresh = self.render_sidebar()
+        refresh, openai_api_key = self.render_sidebar()
 
         if refresh:
             st.cache_data.clear()
+
+        self.openai_api_key = openai_api_key
 
         df = self.fetch_news()
 

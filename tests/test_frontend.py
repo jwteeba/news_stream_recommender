@@ -115,36 +115,30 @@ class TestNewsRecommenderApp:
         assert isinstance(df, pd.DataFrame)
         assert len(df) == 0
 
-    @patch("streamlit.sidebar.title")
-    @patch("streamlit.sidebar.button")
-    @patch("streamlit.sidebar.text_input")
-    @patch("streamlit.sidebar.markdown")
-    @patch("streamlit.sidebar.write")
-    def test_render_sidebar(
-        self,
-        app,
-        mock_write,
-        mock_markdown,
-        mock_text_input,
-        mock_button,
-        mock_title,
-    ):
-        """Test sidebar rendering"""
+    def test_render_sidebar(self, app, mocker):
+        """Test sidebar rendering using the native pytest mocker fixture"""
 
-        mock_button.return_value = True
-        mock_text_input.return_value = "fake-api-key"
+        # 1. Mock the base sidebar object
+        mock_sidebar = mocker.patch("streamlit.sidebar")
 
+        # 2. Setup the behavior of the elements on the sidebar
+        mock_sidebar.button.return_value = True
+        mock_sidebar.text_input.return_value = "fake-api-key"
+
+        # 3. Execute the function under test
         refresh, api_key = app.render_sidebar()
 
+        # 4. Assert values
         assert refresh is True
         assert api_key == "fake-api-key"
 
-        mock_title.assert_called_once_with("🧭 Controls")
-        mock_text_input.assert_called_once_with(
+        # 5. Assert the sidebar calls directly on the mock object
+        mock_sidebar.title.assert_called_once_with("🧭 Controls")
+        mock_sidebar.text_input.assert_called_once_with(
             "🔑 Enter your OpenAI API key:",
             type="password",
         )
-        mock_button.assert_called_once_with("🔄 Refresh Data")
+        mock_sidebar.button.assert_called_once_with("🔄 Refresh Data")
 
     @patch("streamlit.columns")
     @patch("streamlit.selectbox")
@@ -307,7 +301,7 @@ class TestNewsRecommenderApp:
         sample_df,
     ):
         """Test successful app run"""
-        mock_render_sidebar.return_value = False
+        mock_render_sidebar.return_value = (False, "Test-API-Key")
         mock_fetch_news.return_value = sample_df
         mock_render_filters.return_value = ("All", "")
         mock_filter_data.return_value = sample_df
@@ -335,7 +329,7 @@ class TestNewsRecommenderApp:
         app,
     ):
         """Test app run with no data"""
-        mock_render_sidebar.return_value = False
+        mock_render_sidebar.return_value = (False, "Test-API-Key")
         mock_fetch_news.return_value = pd.DataFrame()
 
         app.run()
@@ -350,7 +344,7 @@ class TestNewsRecommenderApp:
         self, mock_clear, mock_fetch_news, mock_render_sidebar, app, sample_df
     ):
         """Test app run with refresh button clicked"""
-        mock_render_sidebar.return_value = True
+        mock_render_sidebar.return_value = (True, "Test-API-Key")
         mock_fetch_news.return_value = sample_df
 
         with patch.object(app, "render_filters", return_value=("All", "")):
